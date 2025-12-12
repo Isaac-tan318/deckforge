@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { animate, stagger } from "animejs";
 import CardGrid from "@/components/client/CardGrid";
-import SelectedCards from "@/components/client/SelectedCards";
 import DeckDisplay from "@/components/client/DeckDisplay";
 import MainDeck from "@/components/client/MainDeck";
 
@@ -78,7 +77,7 @@ export default function DeckBuilder() {
       setSelectedCards((prev) => [...prev, card]);
     } else {
       // Shake animation when trying to add more than 8
-      animate(".selected-cards-container", {
+      animate(".main-deck-container", {
         translateX: [0, -10, 10, -10, 10, 0],
         duration: 400,
         easing: "inOutSine",
@@ -86,43 +85,36 @@ export default function DeckBuilder() {
     }
   };
 
-  const handleRemoveCard = (card) => {
-    setSelectedCards((prev) => prev.filter((c) => c.key !== card.key));
+  const handleRemoveCard = (cardKey) => {
+    setSelectedCards((prev) => prev.filter((c) => c.key !== cardKey));
   };
 
-  const handleClearAll = () => {
-    animate(".selected-card", {
+  const handleClearDeck = () => {
+    animate(".main-deck-card", {
       scale: [1, 0],
       opacity: [1, 0],
       delay: stagger(50),
       duration: 200,
       easing: "inQuad",
-      onComplete: () => setSelectedCards([]),
+      onComplete: () => {
+        setSelectedCards([]);
+        setGeneratedDeck(null);
+      },
     });
   };
 
   const handleCreateDeck = async () => {
+    if (decks.length === 0) return;
+    
     setIsCreatingDeck(true);
     
-    // Small delay for effect
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Pick the best matching deck (first one since they're sorted by match)
+    const bestDeck = decks[0];
     
-    if (decks.length > 0) {
-      // Pick the best deck (first one, sorted by efficiency)
-      const bestDeck = decks[0];
-      setGeneratedDeck(bestDeck.cards);
-    } else if (selectedCards.length === 0) {
-      // No filters, pick a random meta deck
-      const randomIndex = Math.floor(Math.random() * decks.length);
-      const randomDeck = decks[randomIndex] || decks[0];
-      if (randomDeck) {
-        setGeneratedDeck(randomDeck.cards);
-      }
-    } else {
-      // No matching decks found
-      setGeneratedDeck(null);
-    }
-    
+    // Set the generated deck - convert card keys to card objects
+    const deckCards = bestDeck.cards.map(key => cards.find(c => c.key === key)).filter(Boolean);
+    setSelectedCards(deckCards);
+    setGeneratedDeck(bestDeck);
     setIsCreatingDeck(false);
   };
 
@@ -156,26 +148,18 @@ export default function DeckBuilder() {
 
         {/* Main Deck Display */}
         <MainDeck
-          deck={generatedDeck}
+          deck={selectedCards}
           cards={cards}
+          onRemoveCard={handleRemoveCard}
+          onClearDeck={handleClearDeck}
           onCreateDeck={handleCreateDeck}
           isLoading={isCreatingDeck}
-          hasFilters={selectedCards.length > 0}
         />
 
         {/* Main content grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left panel - Card Selection */}
           <div className="space-y-4">
-            {/* Selected Cards Filter */}
-            <div className="selected-cards-container">
-              <SelectedCards
-                selectedCards={selectedCards}
-                onRemoveCard={handleRemoveCard}
-                onClearAll={handleClearAll}
-              />
-            </div>
-
             {/* Search and Filter */}
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
               <div className="flex flex-col sm:flex-row gap-4">

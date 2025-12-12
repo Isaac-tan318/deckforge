@@ -41,9 +41,21 @@ export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCre
     }
   }, [deck?.length]);
 
-  const getCardImageUrl = (card) => {
-    const key = typeof card === 'string' ? card : card.key;
-    return `https://royaleapi.github.io/cr-api-assets/cards-150/${key}.png`;
+  const getCardImageUrl = (card, isEvoSlot = false) => {
+    const cardData = getCardData(card);
+    
+    // If in evo slot and card has evolution, use evo image
+    if (isEvoSlot && cardData?.hasEvolution && cardData?.evolutionIconUrl) {
+      return cardData.evolutionIconUrl;
+    }
+    
+    // Use official API icon URL
+    return cardData?.iconUrl || "";
+  };
+
+  const canEvolve = (card) => {
+    const cardData = getCardData(card);
+    return cardData?.hasEvolution && !!cardData?.evolutionIconUrl;
   };
 
   const getCardData = (card) => {
@@ -153,17 +165,32 @@ export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCre
         {deck && deck.map((card, index) => {
           const cardData = getCardData(card);
           const cardKey = getCardKey(card);
+          const isEvoSlot = index < 2;
+          const isEvo = isEvoSlot && canEvolve(card);
+          
           return (
             <div
               key={`${cardKey}-${index}`}
               onClick={() => handleCardClick(card)}
               className={`main-deck-card relative aspect-[3/4] bg-gradient-to-br ${
-                cardData ? getRarityGradient(cardData.rarity) : "from-gray-600 to-gray-700"
-              } rounded-xl p-1 shadow-lg transform transition-transform hover:scale-110 hover:z-10 cursor-pointer group`}
+                isEvo 
+                  ? "from-purple-500 to-violet-700" 
+                  : (cardData ? getRarityGradient(cardData.rarity) : "from-gray-600 to-gray-700")
+              } rounded-xl p-1 shadow-lg transform transition-transform hover:scale-110 hover:z-10 cursor-pointer group ${
+                isEvo ? "ring-2 ring-purple-400 ring-offset-2 ring-offset-gray-900" : ""
+              }`}
             >
+              {/* Evo badge */}
+              {isEvoSlot && (
+                <div className={`absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2 py-0.5 rounded-full z-20 ${
+                  isEvo ? "bg-purple-500 text-white" : "bg-gray-600 text-gray-300"
+                }`}>
+                  EVO
+                </div>
+              )}
               <div className="bg-gray-800 rounded-lg w-full h-full flex items-center justify-center overflow-hidden relative">
                 <img
-                  src={getCardImageUrl(card)}
+                  src={getCardImageUrl(card, isEvoSlot)}
                   alt={cardData?.name || cardKey}
                   className="w-full h-full object-contain p-1"
                 />
@@ -184,13 +211,25 @@ export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCre
         })}
         
         {/* Empty slots */}
-        {Array.from({ length: emptySlots }).map((_, index) => (
-          <div
-            key={`empty-${index}`}
-            className="aspect-[3/4] bg-gray-800/50 rounded-xl border-2 border-gray-600 flex items-center justify-center"
-          >
-          </div>
-        ))}
+        {Array.from({ length: emptySlots }).map((_, index) => {
+          const actualIndex = (deck?.length || 0) + index;
+          const isEvoSlot = actualIndex < 2;
+          
+          return (
+            <div
+              key={`empty-${index}`}
+              className={`aspect-[3/4] bg-gray-800/50 rounded-xl border-2 flex items-center justify-center relative ${
+                isEvoSlot ? "border-purple-500/50" : "border-gray-600"
+              }`}
+            >
+              {isEvoSlot && (
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gray-600 text-gray-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  EVO
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Hint text */}

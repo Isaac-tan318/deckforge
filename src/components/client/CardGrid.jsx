@@ -64,7 +64,8 @@ export default function CardGrid({
   };
 
   const getCardImageUrl = (card) => {
-    return `https://royaleapi.github.io/cr-api-assets/cards-150/${card.key}.png`;
+    // Use official API icon URL
+    return card.iconUrl || "";
   };
 
   return (

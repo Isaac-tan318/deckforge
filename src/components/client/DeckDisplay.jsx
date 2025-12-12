@@ -19,7 +19,9 @@ export default function DeckDisplay({ decks, cards, isLoading }) {
   }, [decks, isLoading]);
 
   const getCardImageUrl = (cardKey) => {
-    return `https://royaleapi.github.io/cr-api-assets/cards-150/${cardKey}.png`;
+    // Find card data to get official API icon URL
+    const cardData = getCardData(cardKey);
+    return cardData?.iconUrl || "";
   };
 
   const getCardData = (cardKey) => {

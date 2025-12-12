@@ -89,6 +89,15 @@ export default function DeckBuilder() {
     setSelectedCards((prev) => prev.filter((c) => c.key !== cardKey));
   };
 
+  const handleReorderDeck = (fromIndex, toIndex) => {
+    setSelectedCards((prev) => {
+      const newCards = [...prev];
+      const [movedCard] = newCards.splice(fromIndex, 1);
+      newCards.splice(toIndex, 0, movedCard);
+      return newCards;
+    });
+  };
+
   const handleClearDeck = () => {
     animate(".main-deck-card", {
       scale: [1, 0],
@@ -154,6 +163,7 @@ export default function DeckBuilder() {
           onRemoveCard={handleRemoveCard}
           onClearDeck={handleClearDeck}
           onCreateDeck={handleCreateDeck}
+          onReorderDeck={handleReorderDeck}
           isLoading={isCreatingDeck}
         />
 

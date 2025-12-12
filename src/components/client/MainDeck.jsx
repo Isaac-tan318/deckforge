@@ -3,11 +3,49 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, stagger } from "animejs";
 
-export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCreateDeck, isLoading }) {
+export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCreateDeck, onReorderDeck, isLoading }) {
   const deckRef = useRef(null);
   const emptySlots = 8 - (deck?.length || 0);
   const prevDeckLength = useRef(0);
   const [showGif, setShowGif] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    // Add a slight delay to show the drag effect
+    setTimeout(() => {
+      e.target.style.opacity = "0.5";
+    }, 0);
+  };
+
+  const handleDragEnd = (e) => {
+    e.target.style.opacity = "1";
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (index !== draggedIndex) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+      onReorderDeck(draggedIndex, dropIndex);
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
 
   const handleClearWithGif = () => {
     setShowGif(true);
@@ -230,18 +268,26 @@ export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCre
           const cardKey = getCardKey(card);
           const isEvoSlot = index < 2;
           const isEvo = isEvoSlot && canEvolve(card);
+          const isDragging = draggedIndex === index;
+          const isDragOver = dragOverIndex === index;
           
           return (
             <div
               key={`${cardKey}-${index}`}
+              draggable
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, index)}
               onClick={() => handleCardClick(card)}
               className={`main-deck-card relative aspect-[3/4] bg-gradient-to-br ${
                 isEvo 
                   ? "from-purple-500 to-violet-700" 
                   : (cardData ? getRarityGradient(cardData.rarity) : "from-gray-600 to-gray-700")
-              } rounded-xl p-1 shadow-lg transform transition-transform hover:scale-110 hover:z-10 cursor-pointer group ${
+              } rounded-xl p-1 shadow-lg transform transition-all duration-200 hover:scale-110 hover:z-10 cursor-grab active:cursor-grabbing group ${
                 isEvo ? "ring-2 ring-purple-400 ring-offset-2 ring-offset-gray-900" : ""
-              }`}
+              } ${isDragging ? "opacity-50 scale-95" : ""} ${isDragOver ? "ring-2 ring-yellow-400 scale-105" : ""}`}
             >
               {/* Evo badge */}
               {isEvoSlot && (
@@ -257,9 +303,9 @@ export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCre
                   alt={cardData?.name || cardKey}
                   className="w-full h-full object-contain p-1"
                 />
-                {/* Remove overlay on hover */}
-                <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/30 transition-colors rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* Remove X icon on hover */}
+                <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg className="w-5 h-5 text-white bg-red-500 rounded-full p-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>

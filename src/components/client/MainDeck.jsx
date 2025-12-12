@@ -140,7 +140,6 @@ export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCre
     return sum + (cardData?.elixir || 0);
   }, 0) || 0;
 
-  const avgElixir = deck?.length > 0 ? (totalElixir / deck.length).toFixed(1) : "0.0";
 
   const handleCardClick = (card) => {
     const key = getCardKey(card);
@@ -161,7 +160,7 @@ export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCre
             <h2 className="text-2xl font-bold text-white">Your Deck</h2>
             <p className="text-gray-400 text-sm">
               {deck && deck.length > 0 
-                ? `${deck.length}/8 cards • ${avgElixir} avg elixir`
+                ? `${deck.length}/8 cards`
                 : "Click cards below to build your deck"}
             </p>
           </div>

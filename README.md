@@ -15,4 +15,6 @@ Instructions to run:
 
 To open the web app, run the command 'npm run dev'
 
+run the command 'npm install animejs' one more time just in case
+
 Open http://localhost:3000 with your browser to see the result.

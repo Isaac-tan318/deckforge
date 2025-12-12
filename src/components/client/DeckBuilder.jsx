@@ -228,7 +228,52 @@ export default function DeckBuilder() {
 
           {/* Right panel - Deck Display */}
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 max-h-[900px] overflow-y-auto custom-scrollbar">
-            <DeckDisplay decks={decks} cards={cards} isLoading={isLoadingDecks} />
+            <DeckDisplay
+              decks={decks}
+              cards={cards}
+              isLoading={isLoadingDecks}
+              onUseDeck={(deck) => {
+                // Map deck card keys to full card objects
+                const deckCards = (deck?.cards || [])
+                  .map((key) => cards.find((c) => c.key === key))
+                  .filter(Boolean);
+
+                const updateDeck = () => {
+                  setSelectedCards(deckCards);
+                  setGeneratedDeck(deck);
+                  // Smooth scroll to top where main deck is
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  
+                  // Pop-in animation for new deck after a short tick
+                  setTimeout(() => {
+                    animate(".main-deck-card", {
+                      scale: [0, 1],
+                      rotateY: [90, 0],
+                      opacity: [0, 1],
+                      delay: stagger(60),
+                      duration: 300,
+                      easing: "outBack",
+                    });
+                  }, 50);
+                };
+
+                const currentCards = document.querySelectorAll(".main-deck-card");
+
+                if (currentCards.length > 0) {
+                  // Animate out current main deck, then set
+                  animate(".main-deck-card", {
+                    scale: [1, 0],
+                    opacity: [1, 0],
+                    delay: stagger(20),
+                    duration: 150,
+                    easing: "inQuad",
+                    complete: updateDeck,
+                  });
+                } else {
+                  updateDeck();
+                }
+              }}
+            />
           </div>
         </div>
 

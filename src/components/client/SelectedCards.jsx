@@ -35,7 +35,7 @@ export default function SelectedCards({ selectedCards, onRemoveCard, onClearAll 
   };
 
   const getCardImageUrl = (card) => {
-    return `https://royaleapi.github.io/cr-api-assets/cards-150/${card.key}.png`;
+    return card.iconUrl || null;
   };
 
   const getRarityBorder = (rarity) => {

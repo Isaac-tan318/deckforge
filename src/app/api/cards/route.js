@@ -32,7 +32,7 @@ export async function GET() {
       name: card.name,
       elixir: card.elixir || 0,
       type: getCardType(card),
-      rarity: card.rarity?.name || "Common",
+      rarity: formatRarity(card.rarity),
       id: card.id,
       maxLevel: card.maxLevel,
       // Use official API icon URLs
@@ -89,4 +89,12 @@ function getCardType(card) {
   }
 
   return "Troop";
+}
+
+// Helper to format rarity from API enum to title case
+function formatRarity(rarity) {
+  if (!rarity) return "Common";
+  // API returns: COMMON, RARE, EPIC, LEGENDARY, CHAMPION
+  // Convert to: Common, Rare, Epic, Legendary, Champion
+  return rarity.charAt(0).toUpperCase() + rarity.slice(1).toLowerCase();
 }

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
 
-export default function DeckDisplay({ decks, cards, isLoading }) {
+export default function DeckDisplay({ decks, cards, isLoading, onUseDeck }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -18,10 +18,21 @@ export default function DeckDisplay({ decks, cards, isLoading }) {
     }
   }, [decks, isLoading]);
 
-  const getCardImageUrl = (cardKey) => {
+  const getCardImageUrl = (cardKey, isEvoSlot = false) => {
     // Find card data to get official API icon URL
     const cardData = getCardData(cardKey);
-    return cardData?.iconUrl || "";
+    
+    // If in evo slot and card has evolution, use evo image
+    if (isEvoSlot && cardData?.hasEvolution && cardData?.evolutionIconUrl) {
+      return cardData.evolutionIconUrl;
+    }
+    
+    return cardData?.iconUrl || null;
+  };
+
+  const canEvolve = (cardKey) => {
+    const cardData = getCardData(cardKey);
+    return cardData?.hasEvolution && !!cardData?.evolutionIconUrl;
   };
 
   const getCardData = (cardKey) => {
@@ -131,25 +142,51 @@ export default function DeckDisplay({ decks, cards, isLoading }) {
                 </div>
               </div>
             </div>
+            <div className="mt-3 sm:mt-0">
+              <button
+                onClick={() => onUseDeck && onUseDeck(deck)}
+                className="px-3 py-2 rounded-lg font-semibold text-white transition-all duration-200 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 hover:shadow-md hover:shadow-blue-500/20 active:scale-95"
+              >
+                <span className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v6h6M20 20v-6h-6M20 8l-6 6M8 20l6-6" />
+                  </svg>
+                  Use
+                </span>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-            {deck.cards.map((cardKey) => {
+            {deck.cards.map((cardKey, cardIndex) => {
               const cardData = getCardData(cardKey);
+              const isEvoSlot = cardIndex < 2;
+              const isEvo = isEvoSlot && canEvolve(cardKey);
+              
               return (
                 <div
                   key={cardKey}
-                  className={`relative bg-gray-700 rounded-lg p-1 transition-transform hover:scale-110 hover:z-10 shadow-lg ${
-                    cardData ? getRarityGlow(cardData.rarity) : ""
-                  }`}
+                  className={`relative rounded-lg p-1 transition-transform hover:scale-110 hover:z-10 shadow-lg ${
+                    isEvo 
+                      ? "bg-gradient-to-br from-purple-500 to-violet-700 ring-2 ring-purple-400" 
+                      : "bg-gray-700"
+                  } ${cardData ? getRarityGlow(cardData.rarity) : ""}`}
                 >
+                  {/* Evo badge */}
+                  {isEvoSlot && (
+                    <div className={`absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2 py-0.5 rounded-full z-20 ${
+                      isEvo ? "bg-purple-500 text-white" : "bg-gray-600 text-gray-300"
+                    }`}>
+                      EVO
+                    </div>
+                  )}
                   <img
-                    src={getCardImageUrl(cardKey)}
+                    src={getCardImageUrl(cardKey, isEvoSlot)}
                     alt={cardData?.name || cardKey}
                     className="w-full h-auto object-contain"
                     loading="lazy"
                   />
-                  {cardData && (
+                  {cardData && cardData.elixir > 0 && (
                     <div className="absolute top-0 left-0 bg-blue-600 text-white text-xs font-bold rounded-br-lg px-1">
                       {cardData.elixir}
                     </div>

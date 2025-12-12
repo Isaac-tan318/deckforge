@@ -65,7 +65,7 @@ export default function CardGrid({
 
   const getCardImageUrl = (card) => {
     // Use official API icon URL
-    return card.iconUrl || "";
+    return card.iconUrl || null;
   };
 
   return (
@@ -100,9 +100,11 @@ export default function CardGrid({
                     className="w-full h-auto object-contain"
                     loading="lazy"
                   />
-                  <div className="absolute top-0 left-0 bg-blue-600 text-white text-xs font-bold rounded-br-lg px-1.5 py-0.5">
-                    {card.elixir}
-                  </div>
+                  {card.elixir > 0 && (
+                    <div className="absolute top-0 left-0 bg-blue-600 text-white text-xs font-bold rounded-br-lg px-1.5 py-0.5">
+                      {card.elixir}
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="text-center mt-1">

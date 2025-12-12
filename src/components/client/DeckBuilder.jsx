@@ -108,13 +108,14 @@ export default function DeckBuilder() {
     
     setIsCreatingDeck(true);
     
-    // Pick the best matching deck (first one since they're sorted by match)
-    const bestDeck = decks[0];
+    // Pick a random deck from the available options
+    const randomIndex = Math.floor(Math.random() * decks.length);
+    const randomDeck = decks[randomIndex];
     
     // Set the generated deck - convert card keys to card objects
-    const deckCards = bestDeck.cards.map(key => cards.find(c => c.key === key)).filter(Boolean);
+    const deckCards = randomDeck.cards.map(key => cards.find(c => c.key === key)).filter(Boolean);
     setSelectedCards(deckCards);
-    setGeneratedDeck(bestDeck);
+    setGeneratedDeck(randomDeck);
     setIsCreatingDeck(false);
   };
 

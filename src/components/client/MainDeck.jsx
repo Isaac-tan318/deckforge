@@ -1,12 +1,25 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { animate, stagger } from "animejs";
 
 export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCreateDeck, isLoading }) {
   const deckRef = useRef(null);
   const emptySlots = 8 - (deck?.length || 0);
   const prevDeckLength = useRef(0);
+  const [showGif, setShowGif] = useState(false);
+
+  const handleClearWithGif = () => {
+    setShowGif(true);
+    // Delay the actual clearing by 3 seconds
+    setTimeout(() => {
+      onClearDeck();
+    }, 5500);
+    // Hide the GIF after 6 seconds
+    setTimeout(() => {
+      setShowGif(false);
+    }, 6100);
+  };
 
   useEffect(() => {
     if (deckRef.current && deck && deck.length > 0) {
@@ -18,7 +31,7 @@ export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCre
           scale: [0, 1],
           rotateY: [90, 0],
           opacity: [0, 1],
-          delay: stagger(80),
+          delay: stagger(150),
           duration: 500,
           easing: "outBack",
         });
@@ -116,10 +129,62 @@ export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCre
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {deck && deck.length === 8 && (
+            <>
+              <button
+                onClick={() => {
+                  // Generate Clash Royale deck link using card IDs
+                  const cardIds = deck.map(card => {
+                    const cardData = getCardData(card);
+                    return cardData?.id;
+                  }).filter(Boolean);
+                  
+                  if (cardIds.length === 8) {
+                    // Format: clashroyale://copyDeck?deck=ID1;ID2;...
+                    const deckLink = `https://link.clashroyale.com/en?clashroyale://copyDeck?deck=${cardIds.join(';')}&tt=159000000&l=Royals`;
+                    window.location.href = deckLink;
+                  }
+                }}
+                className="px-4 py-2 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+              >
+                <span className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Open in CR
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  // Copy deck link to clipboard
+                  const cardIds = deck.map(card => {
+                    const cardData = getCardData(card);
+                    return cardData?.id;
+                  }).filter(Boolean);
+                  
+                  if (cardIds.length === 8) {
+                    const deckLink = `https://link.clashroyale.com/deck/en?deck=${cardIds.join(';')}`;
+                    navigator.clipboard.writeText(deckLink).then(() => {
+                      alert('Deck link copied to clipboard!');
+                    });
+                  }
+                }}
+                className="px-4 py-2 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700"
+              >
+                <span className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                  Copy Link
+                </span>
+              </button>
+            </>
+          )}
+
           {deck && deck.length > 0 && (
             <button
-              onClick={onClearDeck}
+              onClick={handleClearWithGif}
               className="px-4 py-2 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
             >
               <span className="flex items-center gap-2">
@@ -235,6 +300,17 @@ export default function MainDeck({ deck, cards, onRemoveCard, onClearDeck, onCre
         <p className="text-center text-gray-400 text-sm mt-4">
           💡 Click on cards below to add them to your deck. Meta decks containing your cards will be shown.
         </p>
+      )}
+
+      {/* GIF Overlay */}
+      {showGif && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 pointer-events-none">
+          <img
+            src="clash-royale-rocket.gif"
+            alt="Clear animation"
+            className="object-contain scale-[2]"
+          />
+        </div>
       )}
     </div>
   );
